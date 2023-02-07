@@ -94,6 +94,18 @@ func DecodedLen(b byte) int {
 	return bits.TrailingZeros8(b) + 1
 }
 
+// Append appends the encoding of v to b and returns the
+// resulting slice.
+//
+// To encode a signed integer, convert the input with [Zigzag].
+func Append(b []byte, v uint64) []byte {
+	// This could be a smidge faster if we implement it with
+	// binary.LittleEndian.AppendUint64, but this is more
+	// precise: it only allocates exactly n bytes.
+	var s [MaxLen]byte
+	return append(b, s[:Encode(&s, v)]...)
+}
+
 // Encode writes v to b, returning the number of bytes written.
 //
 // To encode a signed integer, convert the input with [Zigzag].

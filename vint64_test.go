@@ -32,6 +32,10 @@ func TestEncode(t *testing.T) {
 		if !bytes.Equal(got, tc.want) {
 			t.Fatalf("#%d: got %#v, expected %#v", i, got, tc.want)
 		}
+		if got := Append(nil, tc.v); !bytes.Equal(got, tc.want) {
+			t.Fatalf("#%d: got %#v, expected %#v", i, got, tc.want)
+		}
+
 		v, err := Decode(got)
 		if err != nil {
 			t.Fatalf("#%d: %v", i, err)
@@ -84,6 +88,7 @@ func TestDecodedLen(t *testing.T) {
 
 func TestInlining(t *testing.T) {
 	want := []string{
+		"Append",
 		"Decode",
 		"DecodedLen",
 		"Encode",
@@ -117,12 +122,16 @@ func TestAllocs(t *testing.T) {
 	test(t, "Encode", func() {
 		sink.int = Encode(&b, rng.Uint64())
 	})
+	test(t, "Append", func() {
+		sink.bytes = Append(sink.bytes[:0], rng.Uint64())
+	})
 }
 
 var sink struct {
 	buf    [MaxLen]byte
 	int    int
 	uint64 uint64
+	bytes  []byte
 	err    error
 }
 
@@ -139,6 +148,21 @@ func BenchmarkEncode(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		sink.int = Encode(p, s[i%len(s)])
+	}
+}
+
+func BenchmarkAppend(b *testing.B) {
+	rng := rand.New(rand.NewSource(seed()))
+	// s is a power of two array so that len(s) gets compiled
+	// into a mask, which ~free compared to modulo.
+	var s [1024]uint64
+	for i := range s {
+		s[i] = rng.Uint64()
+	}
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		sink.bytes = Append(sink.bytes[:0], s[i%len(s)])
 	}
 }
 
