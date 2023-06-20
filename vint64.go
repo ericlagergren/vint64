@@ -78,7 +78,7 @@ func Decode(b []byte) (v uint64, err error) {
 		v = binary.LittleEndian.Uint64(b[1:])
 	} else {
 		e := make([]byte, 8)
-		copy(e, b)
+		copy(e, b[:n+1])
 		v = binary.LittleEndian.Uint64(e) >> (n + 1)
 	}
 	if n != 0 && v < 1<<(7*n) {

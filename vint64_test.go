@@ -14,6 +14,22 @@ func seed() uint64 {
 	return uint64(time.Now().UnixNano())
 }
 
+func TestIssue1(t *testing.T) {
+	data := make([]byte, 480)
+	for i := range data {
+		data[i] = 'A'
+	}
+	got := Append(nil, uint64(len(data)))
+	got = append(got, data...)
+	v, err := Decode(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v != uint64(len(data)) {
+		t.Fatalf("got %d, expected %d", v, len(data))
+	}
+}
+
 func TestEncode(t *testing.T) {
 	for i, tc := range []struct {
 		v    uint64
